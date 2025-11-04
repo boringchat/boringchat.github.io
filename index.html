@@ -4,35 +4,435 @@
 <meta charset="UTF-8" />
 <title>Boring Chat</title>
 <style>
+  *{margin:0;padding:0;box-sizing:border-box;}
   body{
-    background:#000;
+    background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 100%);
     color:#eee;
-    font-family:Poppins,Arial,sans-serif;
-    margin:0;
+    font-family:'Segoe UI',Poppins,Arial,sans-serif;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    min-height:100vh;
+    padding:20px;
   }
-  #app{background:#111;padding:20px;border-radius:14px;width:90%;max-width:500px;}
-  input,button{width:100%;padding:10px;margin:6px 0;border:none;border-radius:8px;font-size:1em;}
-  input{background:#222;color:#eee;}
-  input[type="file"]{padding:8px;font-size:0.9em;}
-  button{background:#444;color:#eee;cursor:pointer;}
-  button:hover{background:#666;}
-  button:disabled{background:#333;cursor:not-allowed;opacity:0.5;}
-  #messages{background:#181818;height:300px;overflow-y:auto;border-radius:10px;padding:10px;margin-bottom:10px;}
-  .message{margin:4px 0;padding:5px 8px;border-radius:6px;background:#222;}
-  .own{background:#555;text-align:right;}
-  .message-sender{font-size:0.85em;color:#aaa;margin-bottom:3px;}
-  img.chat-img{max-width:100%;max-height:300px;border-radius:8px;margin-top:4px;}
-  #roomList{background:#181818;border-radius:10px;padding:15px;margin:10px 0;max-height:200px;overflow-y:auto;}
-  #roomList h3{margin-top:0;color:#aaa;font-size:0.9em;}
-  .room-item{background:#222;padding:8px 12px;margin:6px 0;border-radius:6px;cursor:pointer;transition:background 0.2s;}
-  .room-item:hover{background:#333;}
-  .room-item span{color:#888;font-size:0.85em;margin-left:10px;}
-  .no-rooms{color:#666;font-style:italic;text-align:center;padding:10px;}
-  .upload-status{font-size:0.85em;color:#4a9eff;margin:5px 0;}
+  #app{
+    background:rgba(17,17,17,0.95);
+    backdrop-filter:blur(10px);
+    padding:30px;
+    border-radius:20px;
+    width:100%;
+    max-width:1200px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    border:1px solid rgba(255,255,255,0.1);
+  }
+  .chat-layout{
+    display:grid;
+    grid-template-columns:1fr 350px;
+    gap:20px;
+  }
+  @media(max-width:900px){
+    .chat-layout{grid-template-columns:1fr;}
+  }
+  h1{color:#4a9eff;text-align:center;margin-bottom:20px;font-size:2em;}
+  h2{color:#888;font-size:1.2em;margin-bottom:15px;}
+  input,button,select{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:none;
+    border-radius:10px;
+    font-size:1em;
+    transition:all 0.3s;
+  }
+  input,select{
+    background:#222;
+    color:#eee;
+    border:2px solid transparent;
+  }
+  input:focus,select:focus{
+    outline:none;
+    border:2px solid #4a9eff;
+    background:#2a2a2a;
+  }
+  input[type="file"]{padding:10px;font-size:0.9em;}
+  button{
+    background:linear-gradient(135deg,#4a9eff 0%,#357abd 100%);
+    color:#fff;
+    cursor:pointer;
+    font-weight:600;
+    border:none;
+  }
+  button:hover{
+    background:linear-gradient(135deg,#5aaaff 0%,#4a9eff 100%);
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(74,158,255,0.4);
+  }
+  button:disabled{
+    background:#333;
+    cursor:not-allowed;
+    opacity:0.5;
+    transform:none;
+  }
+  button.secondary{
+    background:linear-gradient(135deg,#444 0%,#333 100%);
+  }
+  button.secondary:hover{
+    background:linear-gradient(135deg,#555 0%,#444 100%);
+  }
+  button.danger{
+    background:linear-gradient(135deg,#d44 0%,#a33 100%);
+  }
+  #messages{
+    background:#0d0d0d;
+    height:600px;
+    overflow-y:auto;
+    border-radius:12px;
+    padding:15px;
+    margin-bottom:10px;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+  .message{
+    margin:8px 0;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#1a1a1a;
+    position:relative;
+    animation:slideIn 0.3s ease;
+  }
+  @keyframes slideIn{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .own{
+    background:linear-gradient(135deg,#2a3a5a 0%,#1a2a4a 100%);
+    margin-left:40px;
+  }
+  .message-sender{
+    font-size:0.9em;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .message-text{
+    color:#ddd;
+    word-wrap:break-word;
+  }
+  .reply-indicator{
+    background:#2a2a2a;
+    padding:6px 10px;
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:0.85em;
+    color:#888;
+    border-left:3px solid #4a9eff;
+  }
+  .reply-badge{
+    display:inline-block;
+    background:#4a9eff;
+    color:#fff;
+    padding:2px 8px;
+    border-radius:6px;
+    font-size:0.75em;
+    margin-right:6px;
+  }
+  img.chat-img{
+    max-width:100%;
+    max-height:300px;
+    border-radius:10px;
+    margin-top:8px;
+    cursor:pointer;
+  }
+  #roomList{
+    background:#0d0d0d;
+    border-radius:12px;
+    padding:15px;
+    margin:15px 0;
+    max-height:200px;
+    overflow-y:auto;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+  #roomList h3{
+    margin-bottom:10px;
+    color:#888;
+    font-size:0.9em;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .room-item{
+    background:#1a1a1a;
+    padding:10px 14px;
+    margin:6px 0;
+    border-radius:10px;
+    cursor:pointer;
+    transition:all 0.3s;
+    border:1px solid transparent;
+  }
+  .room-item:hover{
+    background:#252525;
+    border:1px solid #4a9eff;
+    transform:translateX(5px);
+  }
+  .room-item span{
+    color:#666;
+    font-size:0.85em;
+    margin-left:10px;
+  }
+  .no-rooms{
+    color:#666;
+    font-style:italic;
+    text-align:center;
+    padding:20px;
+  }
+  .upload-status{
+    font-size:0.85em;
+    color:#4a9eff;
+    margin:5px 0;
+    text-align:center;
+  }
+  .color-picker{
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    gap:8px;
+    margin:10px 0;
+  }
+  .color-option{
+    width:100%;
+    aspect-ratio:1;
+    border-radius:8px;
+    cursor:pointer;
+    border:3px solid transparent;
+    transition:all 0.3s;
+  }
+  .color-option:hover{
+    transform:scale(1.1);
+  }
+  .color-option.selected{
+    border:3px solid #fff;
+    box-shadow:0 0 10px currentColor;
+  }
+  .reply-bar{
+    background:#2a2a2a;
+    padding:8px 12px;
+    border-radius:10px;
+    margin-bottom:8px;
+    display:none;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .reply-bar.active{display:flex;}
+  .reply-bar button{
+    width:auto;
+    padding:4px 12px;
+    margin:0;
+    background:#d44;
+    font-size:0.85em;
+  }
+  .message-input-container{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .plus-btn{
+    width:45px;
+    height:45px;
+    min-width:45px;
+    padding:0;
+    border-radius:50%;
+    background:#2a2a2a;
+    color:#888;
+    font-size:1.5em;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border:2px solid #333;
+    transition:all 0.3s;
+    margin:0;
+  }
+  .plus-btn:hover{
+    background:#3a3a3a;
+    border-color:#4a9eff;
+    color:#4a9eff;
+    transform:rotate(90deg);
+  }
+  .message-input-wrapper{
+    flex:1;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    background:#222;
+    border-radius:25px;
+    padding:8px 15px;
+    border:2px solid transparent;
+    transition:all 0.3s;
+  }
+  .message-input-wrapper:focus-within{
+    border-color:#4a9eff;
+    background:#2a2a2a;
+  }
+  .message-input-wrapper input{
+    flex:1;
+    background:transparent;
+    border:none;
+    padding:8px 5px;
+    margin:0;
+    color:#eee;
+  }
+  .message-input-wrapper input:focus{
+    outline:none;
+    border:none;
+    background:transparent;
+  }
+  .send-btn{
+    width:40px;
+    height:40px;
+    min-width:40px;
+    padding:0;
+    border-radius:50%;
+    background:linear-gradient(135deg,#4a9eff 0%,#357abd 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    margin:0;
+    font-size:1.2em;
+  }
+  .send-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  #imgUpload{
+    display:none;
+  }
+  .attachment-menu{
+    position:absolute;
+    bottom:60px;
+    left:10px;
+    background:#1a1a1a;
+    border:1px solid #333;
+    border-radius:12px;
+    padding:10px;
+    display:none;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+    z-index:100;
+  }
+  .attachment-menu.active{display:block;}
+  .attachment-menu button{
+    width:100%;
+    margin:5px 0;
+    padding:10px 15px;
+    text-align:left;
+    background:#2a2a2a;
+    font-size:0.9em;
+  }
+  .attachment-menu button:hover{
+    background:#3a3a3a;
+  }
+  .image-preview-container{
+    background:#2a2a2a;
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:10px;
+    display:none;
+    position:relative;
+  }
+  .image-preview-container.active{display:block;}
+  .image-preview{
+    max-width:200px;
+    max-height:200px;
+    border-radius:8px;
+    display:block;
+  }
+  .remove-preview{
+    position:absolute;
+    top:5px;
+    right:5px;
+    width:30px;
+    height:30px;
+    min-width:30px;
+    border-radius:50%;
+    background:#d44;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    font-size:1.2em;
+  }
+  .remove-preview:hover{
+    background:#e55;
+  }
+  #canvasSection{
+    background:#0d0d0d;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.05);
+    height:fit-content;
+  }
+  #canvasSection h3{
+    color:#888;
+    font-size:1em;
+    margin-bottom:10px;
+  }
+  #drawCanvas{
+    width:100%;
+    height:400px;
+    border-radius:10px;
+    cursor:crosshair;
+    background:#fff;
+    border:2px solid #333;
+    display:block;
+  }
+  .canvas-controls{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .canvas-controls input[type="color"]{
+    width:50px;
+    height:40px;
+    padding:2px;
+    cursor:pointer;
+  }
+  .canvas-controls input[type="range"]{
+    flex:1;
+    min-width:100px;
+  }
+  .canvas-controls button{
+    flex:1;
+    min-width:100px;
+    font-size:0.9em;
+    padding:8px;
+  }
+  #messages::-webkit-scrollbar,#roomList::-webkit-scrollbar{width:8px;}
+  #messages::-webkit-scrollbar-track,#roomList::-webkit-scrollbar-track{background:#0d0d0d;}
+  #messages::-webkit-scrollbar-thumb,#roomList::-webkit-scrollbar-thumb{
+    background:#333;
+    border-radius:10px;
+  }
+  #messages::-webkit-scrollbar-thumb:hover,#roomList::-webkit-scrollbar-thumb:hover{background:#444;}
+  .message-actions{
+    position:absolute;
+    right:10px;
+    top:10px;
+    opacity:0;
+    transition:opacity 0.3s;
+  }
+  .message:hover .message-actions{opacity:1;}
+  .reply-btn{
+    background:#4a9eff;
+    color:#fff;
+    border:none;
+    padding:4px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:0.8em;
+  }
+  .reply-btn:hover{background:#357abd;}
 </style>
 </head>
 <body>
@@ -41,11 +441,18 @@
   <div id="login">
     <input id="displayName" placeholder="Display name">
     <input id="roomName" placeholder="Room name">
-    <button id="joinRoom">Join / Create</button>
-    <button id="adminLogin">Moderator Login</button>
+    <input id="roomPassword" type="password" placeholder="Room password (optional)">
+    
+    <div style="margin:10px 0;">
+      <label style="color:#888;font-size:0.9em;margin-bottom:5px;display:block;">Choose your name color:</label>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
+    
+    <button id="joinRoom">Join / Create Room</button>
+    <button id="adminLogin" class="secondary">Moderator Login</button>
     
     <div id="roomList">
-      <h3>AVAILABLE ROOMS</h3>
+      <h3>Available Rooms</h3>
       <div id="roomItems">
         <div class="no-rooms">Loading rooms...</div>
       </div>
@@ -54,13 +461,49 @@
 
   <div id="chat" style="display:none">
     <h2 id="roomHeader"></h2>
-    <div id="messages"></div>
-    <input id="messageInput" placeholder="Type a message…">
-    <input type="file" id="imgUpload" accept="image/*">
-    <div id="uploadStatus" class="upload-status"></div>
-    <button id="sendBtn">Send Message</button>
-    <button id="sendImgBtn" disabled>Send Image</button>
-    <button id="leaveBtn">Leave Room</button>
+    
+    <div class="chat-layout">
+      <div class="chat-main">
+        <div id="messages"></div>
+        
+        <div id="replyBar" class="reply-bar">
+          <span id="replyText"></span>
+          <button id="cancelReply">✕</button>
+        </div>
+        
+        <div id="imagePreviewContainer" class="image-preview-container">
+          <img id="imagePreview" class="image-preview">
+          <button class="remove-preview" id="removePreview">✕</button>
+        </div>
+        
+        <div class="message-input-container">
+          <button class="plus-btn" id="plusBtn">+</button>
+          <div class="message-input-wrapper">
+            <input id="messageInput" placeholder="Type a message…">
+            <button class="send-btn" id="sendBtn">➤</button>
+          </div>
+        </div>
+        
+        <div id="attachmentMenu" class="attachment-menu">
+          <button id="uploadImageBtn">📷 Upload Image</button>
+        </div>
+        
+        <input type="file" id="imgUpload" accept="image/*">
+        <div id="uploadStatus" class="upload-status"></div>
+      </div>
+      
+      <div id="canvasSection">
+        <h3>🎨 Collaborative Canvas</h3>
+        <canvas id="drawCanvas"></canvas>
+        <div class="canvas-controls">
+          <input type="color" id="brushColor" value="#000000">
+          <input type="range" id="brushSize" min="1" max="20" value="5" title="Brush size">
+          <button id="clearCanvas" class="danger" style="display:none;">Clear</button>
+        </div>
+      </div>
+    </div>
+    
+    <button id="leaveBtn" class="secondary" style="margin-top:15px;">Leave Room</button>
   </div>
 </div>
 
@@ -84,198 +527,361 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let currentRoom=null, displayName="", isAdmin=false, selectedFile=null;
+let currentRoom=null, displayName="", userColor="#4a9eff", isAdmin=false, replyingTo=null, pendingImage=null;
 
-const nameInput=document.getElementById("displayName");
-const roomInput=document.getElementById("roomName");
-const msgInput=document.getElementById("messageInput");
-const joinBtn=document.getElementById("joinRoom");
-const sendBtn=document.getElementById("sendBtn");
-const sendImgBtn=document.getElementById("sendImgBtn");
-const messagesDiv=document.getElementById("messages");
-const chatDiv=document.getElementById("chat");
-const loginDiv=document.getElementById("login");
-const header=document.getElementById("roomHeader");
-const upload=document.getElementById("imgUpload");
-const uploadStatus=document.getElementById("uploadStatus");
-const roomItems=document.getElementById("roomItems");
+const colors=['#4a9eff','#ff4a6e','#4aff8e','#ff9d4a','#d64aff','#4affeb','#ffeb4a','#ff4ad6'];
 
-// Load and display all rooms
+// Setup color picker
+const colorPicker=document.getElementById("colorPicker");
+colors.forEach(color=>{
+  const div=document.createElement("div");
+  div.className="color-option";
+  div.style.background=color;
+  if(color===userColor)div.classList.add("selected");
+  div.onclick=()=>{
+    document.querySelectorAll(".color-option").forEach(el=>el.classList.remove("selected"));
+    div.classList.add("selected");
+    userColor=color;
+  };
+  colorPicker.appendChild(div);
+});
+
+// Load rooms
 async function loadRooms(){
   try{
     const roomsCol=collection(db,"rooms");
     const snapshot=await getDocs(roomsCol);
-    
+    const roomItems=document.getElementById("roomItems");
     roomItems.innerHTML="";
-    
     if(snapshot.empty){
       roomItems.innerHTML='<div class="no-rooms">No rooms yet. Create one!</div>';
       return;
     }
-    
-    snapshot.forEach(doc=>{
-      const data=doc.data();
+    snapshot.forEach(docSnap=>{
+      const data=docSnap.data();
       const msgCount=(data.messages||[]).length;
-      
+      const hasPassword=!!data.password;
       const item=document.createElement("div");
       item.className="room-item";
-      item.innerHTML=`${doc.id} <span>(${msgCount} messages)</span>`;
-      item.onclick=()=>{
-        roomInput.value=doc.id;
+      item.innerHTML=`${hasPassword?'🔒 ':''}${docSnap.id} <span>(${msgCount} messages)</span>`;
+      item.onclick=async()=>{
+        document.getElementById("roomName").value=docSnap.id;
+        if(hasPassword){
+          const pass=prompt("This room is password protected. Enter password:");
+          if(pass){
+            document.getElementById("roomPassword").value=pass;
+            document.getElementById("joinRoom").click();
+          }
+        }else{
+          document.getElementById("joinRoom").click();
+        }
       };
       roomItems.appendChild(item);
     });
   }catch(err){
-    roomItems.innerHTML='<div class="no-rooms">Error loading rooms</div>';
-    console.error(err);
+    document.getElementById("roomItems").innerHTML='<div class="no-rooms">Error loading rooms</div>';
   }
 }
 
-// Load rooms on page load
 loadRooms();
 
-joinBtn.onclick=async()=>{
-  const room=roomInput.value.trim();
-  displayName=nameInput.value.trim();
+// Join room
+document.getElementById("joinRoom").onclick=async()=>{
+  const room=document.getElementById("roomName").value.trim();
+  displayName=document.getElementById("displayName").value.trim();
   if(!room||!displayName)return alert("Enter name & room!");
   const refRoom=doc(db,"rooms",room);
   const snap=await getDoc(refRoom);
-  if(!snap.exists())await setDoc(refRoom,{messages:[]});
+  if(!snap.exists())await setDoc(refRoom,{messages:[],canvasData:""});
   currentRoom=refRoom;
-  loginDiv.style.display="none"; 
-  chatDiv.style.display="block";
-  header.textContent="Room: "+room;
+  document.getElementById("login").style.display="none"; 
+  document.getElementById("chat").style.display="block";
+  document.getElementById("roomHeader").textContent="Room: "+room;
   
-  onSnapshot(refRoom,(d)=>{
+  setupChat();
+  setupCanvas();
+  
+  if(isAdmin)document.getElementById("clearCanvas").style.display="block";
+};
+
+function setupChat(){
+  const messagesDiv=document.getElementById("messages");
+  const msgInput=document.getElementById("messageInput");
+  const sendBtn=document.getElementById("sendBtn");
+  const upload=document.getElementById("imgUpload");
+  const uploadStatus=document.getElementById("uploadStatus");
+  const replyBar=document.getElementById("replyBar");
+  const replyText=document.getElementById("replyText");
+  const cancelReply=document.getElementById("cancelReply");
+  const plusBtn=document.getElementById("plusBtn");
+  const attachmentMenu=document.getElementById("attachmentMenu");
+  const uploadImageBtn=document.getElementById("uploadImageBtn");
+  const imagePreviewContainer=document.getElementById("imagePreviewContainer");
+  const imagePreview=document.getElementById("imagePreview");
+  const removePreview=document.getElementById("removePreview");
+  
+  onSnapshot(currentRoom,(d)=>{
     const data=d.data();
     messagesDiv.innerHTML="";
-    (data.messages||[]).forEach(m=>{
+    (data.messages||[]).forEach((m,idx)=>{
       const div=document.createElement("div");
       div.className="message"+(m.sender===displayName?" own":"");
       
+      if(m.replyTo!==undefined){
+        const replyDiv=document.createElement("div");
+        replyDiv.className="reply-indicator";
+        const replyMsg=data.messages[m.replyTo];
+        if(replyMsg){
+          const replyContent=replyMsg.type==="image"?`${replyMsg.sender}'s image`:`${replyMsg.sender}: ${replyMsg.text.length>30?replyMsg.text.substr(0,30)+'...':replyMsg.text}`;
+          replyDiv.innerHTML=`<span class="reply-badge">↩</span> ${replyContent}`;
+        }else{
+          replyDiv.innerHTML=`<span class="reply-badge">↩</span> Message deleted`;
+        }
+        div.appendChild(replyDiv);
+      }
+      
+      const sender=document.createElement("div");
+      sender.className="message-sender";
+      sender.style.color=m.color||"#4a9eff";
+      sender.textContent=m.sender;
+      div.appendChild(sender);
+      
       if(m.type==="image"){
-        const sender=document.createElement("div");
-        sender.className="message-sender";
-        sender.textContent=m.sender;
-        div.appendChild(sender);
-        
         const img=document.createElement("img");
         img.src=m.text; 
         img.className="chat-img";
         img.alt="Shared image";
         div.appendChild(img);
       }else{
-        div.textContent=`${m.sender}: ${m.text}`;
+        const text=document.createElement("div");
+        text.className="message-text";
+        text.textContent=m.text;
+        div.appendChild(text);
       }
+      
+      const actions=document.createElement("div");
+      actions.className="message-actions";
+      const replyBtn=document.createElement("button");
+      replyBtn.className="reply-btn";
+      replyBtn.textContent="Reply";
+      replyBtn.onclick=()=>{
+        replyingTo=idx;
+        replyBar.classList.add("active");
+        const displayText=m.type==="image"?`${m.sender}'s image`:`${m.sender}: ${m.text.length>30?m.text.substr(0,30)+'...':m.text}`;
+        replyText.textContent=`Replying to ${displayText}`;
+        msgInput.focus();
+      };
+      actions.appendChild(replyBtn);
+      div.appendChild(actions);
+      
       messagesDiv.appendChild(div);
     });
     messagesDiv.scrollTop=messagesDiv.scrollHeight;
+    
+    // Update canvas
+    const canvas=document.getElementById("drawCanvas");
+    const ctx=canvas.getContext("2d");
+    if(data.canvasData){
+      const img=new Image();
+      img.onload=()=>{
+        ctx.fillStyle='#fff';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0);
+      };
+      img.src=data.canvasData;
+    }else{
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
   });
-};
-
-// Enter key to send message
-msgInput.addEventListener("keypress",(e)=>{
-  if(e.key==="Enter") {
-    e.preventDefault();
-    sendBtn.click();
-  }
-});
-
-// Enter in room name
-roomInput.addEventListener("keypress",(e)=>{
-  if(e.key==="Enter") {
-    e.preventDefault();
-    joinBtn.click();
-  }
-});
-
-// Send text message
-sendBtn.onclick=async()=>{
-  const text=msgInput.value.trim();
-  if(!text||!currentRoom)return;
-  try{
-    await updateDoc(currentRoom,{messages:arrayUnion({sender:displayName,text,type:"text",time:Date.now()})});
-    msgInput.value="";
-  }catch(err){
-    alert("Error sending message: "+err.message);
-  }
-};
-
-// File selection handler
-upload.onchange=(e)=>{
-  selectedFile=e.target.files[0];
-  if(selectedFile){
-    sendImgBtn.disabled=false;
-    uploadStatus.textContent=`Ready to send: ${selectedFile.name}`;
-  }else{
-    sendImgBtn.disabled=true;
-    uploadStatus.textContent="";
-  }
-};
-
-// Send image
-sendImgBtn.onclick=async()=>{
-  if(!selectedFile||!currentRoom)return;
   
-  sendImgBtn.disabled=true;
-  uploadStatus.textContent="Uploading...";
+  cancelReply.onclick=()=>{
+    replyingTo=null;
+    replyBar.classList.remove("active");
+  };
   
-  try{
-    const storageRef=ref(storage,`images/${Date.now()}_${selectedFile.name}`);
-    await uploadBytes(storageRef,selectedFile);
-    const url=await getDownloadURL(storageRef);
+  plusBtn.onclick=()=>{
+    attachmentMenu.classList.toggle("active");
+  };
+  
+  document.addEventListener("click",(e)=>{
+    if(!plusBtn.contains(e.target)&&!attachmentMenu.contains(e.target)){
+      attachmentMenu.classList.remove("active");
+    }
+  });
+  
+  uploadImageBtn.onclick=()=>{
+    upload.click();
+    attachmentMenu.classList.remove("active");
+  };
+  
+  msgInput.addEventListener("keypress",(e)=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+  
+  sendBtn.onclick=async()=>{
+    if(!currentRoom)return;
     
-    await updateDoc(currentRoom,{
-      messages:arrayUnion({
-        sender:displayName,
-        text:url,
-        type:"image",
-        time:Date.now()
-      })
-    });
-    
+    if(pendingImage){
+      uploadStatus.textContent="Uploading...";
+      try{
+        const storageRef=ref(storage,`images/${Date.now()}_${pendingImage.name}`);
+        await uploadBytes(storageRef,pendingImage);
+        const url=await getDownloadURL(storageRef);
+        
+        const msg={sender:displayName,text:url,type:"image",time:Date.now(),color:userColor};
+        if(replyingTo!==null)msg.replyTo=replyingTo;
+        await updateDoc(currentRoom,{messages:arrayUnion(msg)});
+        
+        const text=msgInput.value.trim();
+        if(text){
+          const textMsg={sender:displayName,text,type:"text",time:Date.now()+1,color:userColor};
+          if(replyingTo!==null)textMsg.replyTo=replyingTo;
+          await updateDoc(currentRoom,{messages:arrayUnion(textMsg)});
+        }
+        
+        pendingImage=null;
+        imagePreviewContainer.classList.remove("active");
+        msgInput.value="";
+        uploadStatus.textContent="Sent!";
+        setTimeout(()=>uploadStatus.textContent="",2000);
+        replyingTo=null;
+        replyBar.classList.remove("active");
+      }catch(err){
+        uploadStatus.textContent="Error: "+err.message;
+      }
+    }else{
+      const text=msgInput.value.trim();
+      if(!text)return;
+      try{
+        const msg={sender:displayName,text,type:"text",time:Date.now(),color:userColor};
+        if(replyingTo!==null)msg.replyTo=replyingTo;
+        await updateDoc(currentRoom,{messages:arrayUnion(msg)});
+        msgInput.value="";
+        replyingTo=null;
+        replyBar.classList.remove("active");
+      }catch(err){
+        alert("Error: "+err.message);
+      }
+    }
+  };
+  
+  upload.onchange=(e)=>{
+    const f=e.target.files[0];
+    if(!f)return;
+    pendingImage=f;
+    const reader=new FileReader();
+    reader.onload=(e)=>{
+      imagePreview.src=e.target.result;
+      imagePreviewContainer.classList.add("active");
+    };
+    reader.readAsDataURL(f);
     upload.value="";
-    selectedFile=null;
-    uploadStatus.textContent="Image sent!";
-    setTimeout(()=>uploadStatus.textContent="",2000);
-  }catch(err){
-    uploadStatus.textContent="Error: "+err.message;
-    console.error(err);
-  }finally{
-    sendImgBtn.disabled=true;
+  };
+  
+  removePreview.onclick=()=>{
+    pendingImage=null;
+    imagePreviewContainer.classList.remove("active");
+    upload.value="";
+  };
+  
+  document.getElementById("leaveBtn").onclick=()=>location.reload();
+}
+
+function setupCanvas(){
+  const canvas=document.getElementById("drawCanvas");
+  const ctx=canvas.getContext("2d");
+  const brushColor=document.getElementById("brushColor");
+  const brushSize=document.getElementById("brushSize");
+  const clearCanvas=document.getElementById("clearCanvas");
+  
+  canvas.width=320;
+  canvas.height=400;
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  let drawing=false;
+  let lastX=0,lastY=0;
+
+  canvas.onmousedown=(e)=>{
+    drawing=true;
+    const rect=canvas.getBoundingClientRect();
+    lastX=(e.clientX-rect.left)*(canvas.width/rect.width);
+    lastY=(e.clientY-rect.top)*(canvas.height/rect.height);
+  };
+
+  canvas.onmousemove=(e)=>{
+    if(!drawing)return;
+    const rect=canvas.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*(canvas.width/rect.width);
+    const y=(e.clientY-rect.top)*(canvas.height/rect.height);
+    
+    ctx.strokeStyle=brushColor.value;
+    ctx.lineWidth=brushSize.value;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(lastX,lastY);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+    
+    lastX=x;
+    lastY=y;
+  };
+
+  canvas.onmouseup=async()=>{
+    if(!drawing)return;
+    drawing=false;
+    if(currentRoom){
+      const dataURL=canvas.toDataURL();
+      await updateDoc(currentRoom,{canvasData:dataURL});
+    }
+  };
+
+  canvas.onmouseleave=()=>drawing=false;
+
+  clearCanvas.onclick=async()=>{
+    if(confirm("Clear the canvas for everyone?")){
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      await updateDoc(currentRoom,{canvasData:""});
+    }
+  };
+}
+
+document.getElementById("roomName").addEventListener("keypress",(e)=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    document.getElementById("joinRoom").click();
   }
-};
+});
 
-// Leave room
-document.getElementById("leaveBtn").onclick=()=>{
-  location.reload();
-};
-
-// Moderator login
 document.getElementById("adminLogin").onclick=()=>{
   const p=prompt("Enter moderator password:");
   if(p==="admin24"){
     isAdmin=true;
     alert("Moderator mode enabled");
-    deleteRoomOption();
+    if(currentRoom){
+      const del=document.createElement("button");
+      del.textContent="Delete this room";
+      del.className="danger";
+      del.style.marginTop="10px";
+      del.onclick=async()=>{
+        if(confirm("Delete this room?")){
+          await deleteDoc(currentRoom);
+          alert("Room deleted");
+          location.reload();
+        }
+      };
+      document.getElementById("chat").appendChild(del);
+      document.getElementById("clearCanvas").style.display="block";
+    }
   }else{
     alert("Wrong password");
   }
 };
-
-function deleteRoomOption(){
-  const del=document.createElement("button");
-  del.textContent="Delete this room";
-  del.style.background="#d44";
-  del.onclick=async()=>{
-    if(confirm("Delete this room?")){
-      await deleteDoc(currentRoom);
-      alert("Room deleted");
-      location.reload();
-    }
-  };
-  chatDiv.appendChild(del);
-}
 </script>
 </body>
 </html>
