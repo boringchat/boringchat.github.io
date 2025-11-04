@@ -1,134 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Boring Chat</title>
-  <style>
-    body {
-      font-family: "Montserrat", sans-serif;
-      background: linear-gradient(135deg, #000000, #000000);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0;
-    }
-
-    #app {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 20px;
-      padding: 30px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      letter-spacing: 1px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 10px;
-      font-size: 1em;
-    }
-
-    input {
-      background: rgba(255, 255, 255, 0.8);
-      color: #333;
-    }
-
-    button {
-      background: #FFD93D;
-      color: #222;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #FFC300;
-    }
-
-    #roomList {
-      margin-top: 10px;
-      max-height: 200px;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 10px;
-    }
-
-    .room-item {
-      background: rgba(255,255,255,0.2);
-      margin: 5px 0;
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .room-item:hover {
-      background: rgba(255,255,255,0.4);
-    }
-
-    #chat {
-      display: none;
-      margin-top: 10px;
-    }
-
-    #messages {
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-    }
-
-    .message {
-      margin: 5px 0;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.2);
-    }
-
-    .own-message {
-      background: rgba(255,255,255,0.5);
-      text-align: right;
-      color: black;
-    }
-
-  </style>
+<meta charset="UTF-8" />
+<title>Boring Chat</title>
+<style>
+  body{
+    background:#000;
+    color:#eee;
+    font-family:Poppins,Arial,sans-serif;
+    margin:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+  }
+  #app{background:#111;padding:20px;border-radius:14px;width:90%;max-width:500px;}
+  input,button{width:100%;padding:10px;margin:6px 0;border:none;border-radius:8px;font-size:1em;}
+  input{background:#222;color:#eee;}
+  input[type="file"]{padding:8px;font-size:0.9em;}
+  button{background:#444;color:#eee;cursor:pointer;}
+  button:hover{background:#666;}
+  button:disabled{background:#333;cursor:not-allowed;opacity:0.5;}
+  #messages{background:#181818;height:300px;overflow-y:auto;border-radius:10px;padding:10px;margin-bottom:10px;}
+  .message{margin:4px 0;padding:5px 8px;border-radius:6px;background:#222;}
+  .own{background:#555;text-align:right;}
+  .message-sender{font-size:0.85em;color:#aaa;margin-bottom:3px;}
+  img.chat-img{max-width:100%;max-height:300px;border-radius:8px;margin-top:4px;}
+  #roomList{background:#181818;border-radius:10px;padding:15px;margin:10px 0;max-height:200px;overflow-y:auto;}
+  #roomList h3{margin-top:0;color:#aaa;font-size:0.9em;}
+  .room-item{background:#222;padding:8px 12px;margin:6px 0;border-radius:6px;cursor:pointer;transition:background 0.2s;}
+  .room-item:hover{background:#333;}
+  .room-item span{color:#888;font-size:0.85em;margin-left:10px;}
+  .no-rooms{color:#666;font-style:italic;text-align:center;padding:10px;}
+  .upload-status{font-size:0.85em;color:#4a9eff;margin:5px 0;}
+</style>
 </head>
 <body>
-  <div id="app">
-    <h1>Boring Chat</h1>
-
-    <div id="login">
-      <input id="displayName" placeholder="Your name...">
-      <input id="searchRoom" placeholder="Search or create room...">
-      <button id="createRoom">Create Room</button>
-      <div id="roomList"></div>
-    </div>
-
-    <div id="chat">
-      <h2 id="roomHeader"></h2>
-      <div id="messages"></div>
-      <input id="messageInput" placeholder="Type your message...">
-      <button id="sendBtn">Send</button>
+<div id="app">
+  <h1>💬 Boring Chat</h1>
+  <div id="login">
+    <input id="displayName" placeholder="Display name">
+    <input id="roomName" placeholder="Room name">
+    <button id="joinRoom">Join / Create</button>
+    <button id="adminLogin">Moderator Login</button>
+    
+    <div id="roomList">
+      <h3>AVAILABLE ROOMS</h3>
+      <div id="roomItems">
+        <div class="no-rooms">Loading rooms...</div>
+      </div>
     </div>
   </div>
 
-  <script type="module">
-    // 🔥 Your Firebase config (use YOUR values)
-    const firebaseConfig = {
+  <div id="chat" style="display:none">
+    <h2 id="roomHeader"></h2>
+    <div id="messages"></div>
+    <input id="messageInput" placeholder="Type a message…">
+    <input type="file" id="imgUpload" accept="image/*">
+    <div id="uploadStatus" class="upload-status"></div>
+    <button id="sendBtn">Send Message</button>
+    <button id="sendImgBtn" disabled>Send Image</button>
+    <button id="leaveBtn">Leave Room</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, onSnapshot, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const firebaseConfig = {
   apiKey: "AIzaSyAr-HmbO9FHKQP-krDB95hvYf_5J_ODXeo",
   authDomain: "boringchat-e9299.firebaseapp.com",
   databaseURL: "https://boringchat-e9299-default-rtdb.europe-west1.firebasedatabase.app",
@@ -139,118 +80,202 @@
   measurementId: "G-00RB4RNZEG"
 };
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+let currentRoom=null, displayName="", isAdmin=false, selectedFile=null;
 
-    // UI elements
-    const displayNameInput = document.getElementById("displayName");
-    const searchRoomInput = document.getElementById("searchRoom");
-    const createRoomBtn = document.getElementById("createRoom");
-    const roomListDiv = document.getElementById("roomList");
-    const chatDiv = document.getElementById("chat");
-    const messagesDiv = document.getElementById("messages");
-    const sendBtn = document.getElementById("sendBtn");
-    const messageInput = document.getElementById("messageInput");
-    const roomHeader = document.getElementById("roomHeader");
+const nameInput=document.getElementById("displayName");
+const roomInput=document.getElementById("roomName");
+const msgInput=document.getElementById("messageInput");
+const joinBtn=document.getElementById("joinRoom");
+const sendBtn=document.getElementById("sendBtn");
+const sendImgBtn=document.getElementById("sendImgBtn");
+const messagesDiv=document.getElementById("messages");
+const chatDiv=document.getElementById("chat");
+const loginDiv=document.getElementById("login");
+const header=document.getElementById("roomHeader");
+const upload=document.getElementById("imgUpload");
+const uploadStatus=document.getElementById("uploadStatus");
+const roomItems=document.getElementById("roomItems");
 
-    let currentRoom = null;
-    let displayName = "";
-
-    // 🏠 Show all rooms
-    async function loadRooms() {
-      roomListDiv.innerHTML = "<p>Loading rooms...</p>";
-      const querySnapshot = await getDocs(collection(db, "rooms"));
-      roomListDiv.innerHTML = "";
-
-      querySnapshot.forEach((docSnap) => {
-        const room = docSnap.id;
-        const div = document.createElement("div");
-        div.className = "room-item";
-        div.textContent = room;
-        div.onclick = () => joinRoom(room);
-        roomListDiv.appendChild(div);
-      });
-
-      if (roomListDiv.innerHTML === "") {
-        roomListDiv.innerHTML = "<p>No rooms yet. Create one!</p>";
-      }
+// Load and display all rooms
+async function loadRooms(){
+  try{
+    const roomsCol=collection(db,"rooms");
+    const snapshot=await getDocs(roomsCol);
+    
+    roomItems.innerHTML="";
+    
+    if(snapshot.empty){
+      roomItems.innerHTML='<div class="no-rooms">No rooms yet. Create one!</div>';
+      return;
     }
-
-    loadRooms();
-
-    // 🔍 Search for a room
-    searchRoomInput.addEventListener("input", async () => {
-      const term = searchRoomInput.value.toLowerCase();
-      const querySnapshot = await getDocs(collection(db, "rooms"));
-      roomListDiv.innerHTML = "";
-
-      querySnapshot.forEach((docSnap) => {
-        const room = docSnap.id.toLowerCase();
-        if (room.includes(term)) {
-          const div = document.createElement("div");
-          div.className = "room-item";
-          div.textContent = docSnap.id;
-          div.onclick = () => joinRoom(docSnap.id);
-          roomListDiv.appendChild(div);
-        }
-      });
+    
+    snapshot.forEach(doc=>{
+      const data=doc.data();
+      const msgCount=(data.messages||[]).length;
+      
+      const item=document.createElement("div");
+      item.className="room-item";
+      item.innerHTML=`${doc.id} <span>(${msgCount} messages)</span>`;
+      item.onclick=()=>{
+        roomInput.value=doc.id;
+      };
+      roomItems.appendChild(item);
     });
+  }catch(err){
+    roomItems.innerHTML='<div class="no-rooms">Error loading rooms</div>';
+    console.error(err);
+  }
+}
 
-    // ✨ Create room
-    createRoomBtn.onclick = async () => {
-      const roomName = searchRoomInput.value.trim();
-      displayName = displayNameInput.value.trim();
-      if (!roomName || !displayName) {
-        alert("Enter your name and room name!");
-        return;
-      }
-      const roomRef = doc(db, "rooms", roomName);
-      const snap = await getDoc(roomRef);
-      if (!snap.exists()) {
-        await setDoc(roomRef, { messages: [] });
-      }
-      joinRoom(roomName);
-    };
+// Load rooms on page load
+loadRooms();
 
-    // 💬 Join room
-    async function joinRoom(roomName) {
-      displayName = displayNameInput.value.trim();
-      if (!displayName) {
-        alert("Enter your display name first!");
-        return;
+joinBtn.onclick=async()=>{
+  const room=roomInput.value.trim();
+  displayName=nameInput.value.trim();
+  if(!room||!displayName)return alert("Enter name & room!");
+  const refRoom=doc(db,"rooms",room);
+  const snap=await getDoc(refRoom);
+  if(!snap.exists())await setDoc(refRoom,{messages:[]});
+  currentRoom=refRoom;
+  loginDiv.style.display="none"; 
+  chatDiv.style.display="block";
+  header.textContent="Room: "+room;
+  
+  onSnapshot(refRoom,(d)=>{
+    const data=d.data();
+    messagesDiv.innerHTML="";
+    (data.messages||[]).forEach(m=>{
+      const div=document.createElement("div");
+      div.className="message"+(m.sender===displayName?" own":"");
+      
+      if(m.type==="image"){
+        const sender=document.createElement("div");
+        sender.className="message-sender";
+        sender.textContent=m.sender;
+        div.appendChild(sender);
+        
+        const img=document.createElement("img");
+        img.src=m.text; 
+        img.className="chat-img";
+        img.alt="Shared image";
+        div.appendChild(img);
+      }else{
+        div.textContent=`${m.sender}: ${m.text}`;
       }
-      currentRoom = doc(db, "rooms", roomName);
-      document.getElementById("login").style.display = "none";
-      chatDiv.style.display = "block";
-      roomHeader.textContent = `Room: ${roomName}`;
+      messagesDiv.appendChild(div);
+    });
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
+};
 
-      onSnapshot(currentRoom, (doc) => {
-        const data = doc.data();
-        messagesDiv.innerHTML = "";
-        data.messages.forEach((msg) => {
-          const div = document.createElement("div");
-          div.className = "message";
-          if (msg.sender === displayName) div.classList.add("own-message");
-          div.textContent = `${msg.sender}: ${msg.text}`;
-          messagesDiv.appendChild(div);
-        });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      });
+// Enter key to send message
+msgInput.addEventListener("keypress",(e)=>{
+  if(e.key==="Enter") {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+// Enter in room name
+roomInput.addEventListener("keypress",(e)=>{
+  if(e.key==="Enter") {
+    e.preventDefault();
+    joinBtn.click();
+  }
+});
+
+// Send text message
+sendBtn.onclick=async()=>{
+  const text=msgInput.value.trim();
+  if(!text||!currentRoom)return;
+  try{
+    await updateDoc(currentRoom,{messages:arrayUnion({sender:displayName,text,type:"text",time:Date.now()})});
+    msgInput.value="";
+  }catch(err){
+    alert("Error sending message: "+err.message);
+  }
+};
+
+// File selection handler
+upload.onchange=(e)=>{
+  selectedFile=e.target.files[0];
+  if(selectedFile){
+    sendImgBtn.disabled=false;
+    uploadStatus.textContent=`Ready to send: ${selectedFile.name}`;
+  }else{
+    sendImgBtn.disabled=true;
+    uploadStatus.textContent="";
+  }
+};
+
+// Send image
+sendImgBtn.onclick=async()=>{
+  if(!selectedFile||!currentRoom)return;
+  
+  sendImgBtn.disabled=true;
+  uploadStatus.textContent="Uploading...";
+  
+  try{
+    const storageRef=ref(storage,`images/${Date.now()}_${selectedFile.name}`);
+    await uploadBytes(storageRef,selectedFile);
+    const url=await getDownloadURL(storageRef);
+    
+    await updateDoc(currentRoom,{
+      messages:arrayUnion({
+        sender:displayName,
+        text:url,
+        type:"image",
+        time:Date.now()
+      })
+    });
+    
+    upload.value="";
+    selectedFile=null;
+    uploadStatus.textContent="Image sent!";
+    setTimeout(()=>uploadStatus.textContent="",2000);
+  }catch(err){
+    uploadStatus.textContent="Error: "+err.message;
+    console.error(err);
+  }finally{
+    sendImgBtn.disabled=true;
+  }
+};
+
+// Leave room
+document.getElementById("leaveBtn").onclick=()=>{
+  location.reload();
+};
+
+// Moderator login
+document.getElementById("adminLogin").onclick=()=>{
+  const p=prompt("Enter moderator password:");
+  if(p==="admin24"){
+    isAdmin=true;
+    alert("Moderator mode enabled");
+    deleteRoomOption();
+  }else{
+    alert("Wrong password");
+  }
+};
+
+function deleteRoomOption(){
+  const del=document.createElement("button");
+  del.textContent="Delete this room";
+  del.style.background="#d44";
+  del.onclick=async()=>{
+    if(confirm("Delete this room?")){
+      await deleteDoc(currentRoom);
+      alert("Room deleted");
+      location.reload();
     }
-
-    // 📨 Send message
-    sendBtn.onclick = async () => {
-      const text = messageInput.value.trim();
-      if (!text) return;
-      await updateDoc(currentRoom, {
-        messages: arrayUnion({ sender: displayName, text, time: Date.now() })
-      });
-      messageInput.value = "";
-    };
-  </script>
+  };
+  chatDiv.appendChild(del);
+}
+</script>
 </body>
 </html>
-
